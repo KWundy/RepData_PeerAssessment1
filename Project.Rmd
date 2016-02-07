@@ -109,6 +109,7 @@ summary(stepDayMed1)
 By replacing these values, we may have a better idea of the subjects activities and even when recording began
 
 
+
 ###Are there differences in activity patterns between weekdays and weekends?
 
 ```{r,echo=TRUE}

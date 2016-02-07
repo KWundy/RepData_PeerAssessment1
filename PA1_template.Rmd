@@ -4,22 +4,128 @@ output:
   html_document:
     keep_md: true
 ---
+#Project 1
+------
+
+###by. Kevin Wunderlich
+
+```{r,echo=TRUE}
+Proj1 <- read.csv("~/activity.csv")
+library(lubridate)
+library(lattice)
+Proj1$date<-ymd(Proj1$date)
+
+Proj1$WeekDay<-weekdays(x = Proj1$date)
+
+gsub(pattern = "Monday",replacement = "Weekday",x = Proj1$WeekDay)->Proj1$WeekDay
+gsub(pattern = "Tuesday",replacement = "Weekday",x = Proj1$WeekDay)->Proj1$WeekDay
+gsub(pattern = "Wednesday",replacement = "Weekday",x = Proj1$WeekDay)->Proj1$WeekDay
+gsub(pattern = "Thursday",replacement = "Weekday",x = Proj1$WeekDay)->Proj1$WeekDay
+gsub(pattern = "Friday",replacement = "Weekday",x = Proj1$WeekDay)->Proj1$WeekDay
+gsub(pattern = "Saturday",replacement = "Weekend",x = Proj1$WeekDay)->Proj1$WeekDay
+gsub(pattern = "Sunday",replacement = "Weekend",x = Proj1$WeekDay)->Proj1$WeekDay
+```
+
+Above I have:
+-read in the data
+-changed format of the date to year-month-day format using the lubridate package
+-by manipulating the weekdays() function, I was able two great two variables "Weekday" and "Weekend" for later reasons.
+
+### What is the mean total and total of steps taken per day?
+
+First, I calculated and plotted the total number of steps for each day
+
+```{r,echo=TRUE}
+
+as.vector(tapply(X = Proj1$steps,INDEX = Proj1$date,FUN = sum))->stepDayTot
+
+hist(stepDayTot,breaks = 15,col = "black",xlab = "Total Steps",main = "Histogram of Total Steps by Day",border = "white")
+
+```
+
+Similarily, I used tapply() function again to calculate the median and mean for each day
+
+####Means by Day
+```{r, echo=TRUE}
+as.vector(tapply(X = Proj1$steps,INDEX = Proj1$date,FUN = mean))->stepDayAvg
+hist(stepDayAvg,breaks = 15,col = "black",xlab = "Day Recorded (days 1-61)",main = "Histogram of Mean Steps by Day",border = "red")
+```
+
+####Median by Day
+
+```{r, echo=TRUE}
+as.vector(tapply(X = Proj1$steps,INDEX = Proj1$date,FUN = median))->stepDayMed
+summary(stepDayMed)
+```
+
+Clearly, from the Median read outs, we can see that there are many missing values, which poses many problems, however for the next problem consier NA=0.
+
+###What is the average daily activity pattern
+
+Now it is important to consider the entire data set as many intervals of multiple days, i.e. a time series.
+
+Therefore, we will have to condence the data according to time intervals and may arrive at either plot:
 
 
-## Loading and preprocessing the data
+##1) If we consider x-axis to be time intervals 1:288
+
+```{r, echo=TRUE}
+Proj1$steps[is.na(Proj1$steps)]<-0
+as.vector(tapply(X = Proj1$steps,INDEX = Proj1$interval,FUN = mean))->IntervalSteps
+plot(IntervalSteps,type="l",main = "Average Daily Activity",xlab = "Time Intervals",ylab = "Step Count",col="black")
+```
+
+or
+
+
+##2) if we consider x=time intervals 0000:2355 in 5 minute increments
+
+The following plot, allows us to realize that typically around 9am this person is most active.
+
+```{r,echo=TRUE}
+plot(x=unique(Proj1$interval),y=IntervalSteps[!is.na(IntervalSteps)],type="l",main = "Average Daily Activity",xlab = "Time Intervals",ylab = "Step Count",col="black")
+```
+
+###Now consider all of the missing values:
+
+```{r,echo=TRUE}
+sum(is.na(Proj1$steps))->TotalNA
+```
+
+There are `r TotalNA ` missing values!!!
+
+My strategy to fix this is to generate random integers with a mean equal to the mean of the daily averages and a standard deviation of 20 steps, and the code follows along with the renewed computations from part 1.
+
+```{r,echo=TRUE}
+
+Proj1$steps[is.na(Proj1$steps)]<-as.integer(rnorm(length(Proj1$steps[is.na(Proj1$steps)]),mean = mean(stepDayAvg,na.rm = TRUE),sd = 20))
+Proj1$steps<-abs(Proj1$steps)
+as.vector(tapply(X = Proj1$steps,INDEX = Proj1$date,FUN = sum))->stepDayTot1
+
+hist(stepDayTot1,breaks = 15,col = "black",xlab = "Total Steps",main = "Histogram of Total Steps by Day",border = "white")
+
+as.vector(tapply(X = Proj1$steps,INDEX = Proj1$date,FUN = mean))->stepDayAvg1
+
+hist(stepDayAvg1,breaks = 15,col = "black",xlab = "Mean Steps",main = "Histogram of Mean Steps by Day",border = "red")
+
+as.vector(tapply(X = Proj1$steps,INDEX = Proj1$date,FUN = median))->stepDayMed1
+summary(stepDayMed1)
+```
+ 
+By replacing these values, we may have a better idea of the subjects activities and even when recording began
 
 
 
-## What is mean total number of steps taken per day?
+###Are there differences in activity patterns between weekdays and weekends?
+
+```{r,echo=TRUE}
+xyplot(Proj1$steps~Proj1$interval|Proj1$WeekDay,type='l',xlab = "Time Interval",ylab = "Steps Taken",main="Steps Taken Weekend vs Weekday")
+
+```
+
+It is clear that there is more morning activity during the week than during the weekend.
 
 
 
-## What is the average daily activity pattern?
 
 
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
